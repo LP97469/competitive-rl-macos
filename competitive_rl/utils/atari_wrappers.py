@@ -5,7 +5,10 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 
-gym.logger.set_level(40)
+if hasattr(gym.logger, "set_level"):
+    gym.logger.set_level(40)
+else:
+    gym.logger.min_level = 40
 cv2.ocl.setUseOpenCL(False)
 
 
