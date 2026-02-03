@@ -50,12 +50,21 @@ class DummyVecEnv(VecEnv):
 
     def step_wait(self):
         for env_idx in range(self.num_envs):
-            obs, self.buf_rews[env_idx], self.buf_dones[env_idx], self.buf_infos[env_idx] = \
-                self.envs[env_idx].step(self.actions[env_idx])
+            result = self.envs[env_idx].step(self.actions[env_idx])
+            if len(result) == 5:
+                obs, reward, terminated, truncated, info = result
+                done = np.logical_or(terminated, truncated)
+            else:
+                obs, reward, done, info = result
+            self.buf_rews[env_idx] = reward
+            self.buf_dones[env_idx] = done
+            self.buf_infos[env_idx] = info
             if all(self.buf_dones[env_idx]):
                 # save final observation where user can get it, then reset
                 self.buf_infos[env_idx]['terminal_observation'] = obs
                 obs = self.envs[env_idx].reset()
+                if isinstance(obs, tuple):
+                    obs = obs[0]
             self._save_obs(env_idx, obs)
         return (
             self._obs_from_buf(), np.copy(self.buf_rews),
@@ -71,6 +80,8 @@ class DummyVecEnv(VecEnv):
     def reset(self):
         for env_idx in range(self.num_envs):
             obs = self.envs[env_idx].reset()
+            if isinstance(obs, tuple):
+                obs = obs[0]
             self._save_obs(env_idx, obs)
         return self._obs_from_buf()
 

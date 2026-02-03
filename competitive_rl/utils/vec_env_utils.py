@@ -40,7 +40,13 @@ def dict_to_obs(space, obs_dict):
         assert len(obs_dict) == len(
             space.spaces), "size of observation does not match size of " \
                            "observation space"
-        return tuple((obs_dict[i] for i in range(len(space.spaces))))
+        obs_tuple = tuple((obs_dict[i] for i in range(len(space.spaces))))
+        try:
+            if all(obs.shape == obs_tuple[0].shape for obs in obs_tuple):
+                return np.stack(obs_tuple, axis=1)
+        except AttributeError:
+            pass
+        return obs_tuple
     else:
         assert set(obs_dict.keys()) == {
             None}, "multiple observation keys for unstructured observation " \

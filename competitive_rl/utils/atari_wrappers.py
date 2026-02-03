@@ -12,6 +12,19 @@ else:
 cv2.ocl.setUseOpenCL(False)
 
 
+def _normalize_reset(result):
+    if isinstance(result, tuple):
+        return result
+    return result, {}
+
+
+def _normalize_step(result):
+    if len(result) == 5:
+        return result
+    obs, reward, done, info = result
+    return obs, reward, done, False, info
+
+
 class WrapPyTorch(gym.ObservationWrapper):
     def __init__(self, env=None):
         super(WrapPyTorch, self).__init__(env)
@@ -43,7 +56,7 @@ class WrapPyTorch(gym.ObservationWrapper):
 def make_env_a2c_atari(env_id, seed, rank, log_dir, resized_dim=84, frame_stack=None):
     def _thunk():
         env = make_atari(env_id)
-        env.seed(seed + rank)
+        env.reset(seed=seed + rank)
         # if log_dir is not None:
         #     env = Monitor(env, os.path.join(log_dir, str(rank)))
         env = wrap_deepmind(env, resized_dim)
@@ -72,7 +85,7 @@ class NoopResetEnv(gym.Wrapper):
         # assert env.unwrapped.get_action_meanings()[0] == 'NOOP'
 
     def reset(self, **kwargs):
-        self.env.reset(**kwargs)
+        obs, info = _normalize_reset(self.env.reset(**kwargs))
         if self.override_num_noops is not None:
             noops = self.override_num_noops
         else:
@@ -80,13 +93,13 @@ class NoopResetEnv(gym.Wrapper):
         assert noops > 0
         obs = None
         for _ in range(noops):
-            obs, _, done, _ = self.env.step(self.noop_action)
-            if done:
-                obs = self.env.reset(**kwargs)
-        return obs
+            obs, _, terminated, truncated, _ = _normalize_step(self.env.step(self.noop_action))
+            if terminated or truncated:
+                obs, info = _normalize_reset(self.env.reset(**kwargs))
+        return obs, info
 
     def step(self, action):
-        return self.env.step(action)
+        return _normalize_step(self.env.step(action))
 
 
 class MaxAndSkipEnv(gym.Wrapper):
@@ -134,7 +147,7 @@ class MaxAndSkipEnv(gym.Wrapper):
 
         done = None
         for i in range(self._skip):
-            obs, reward, done, info = self.env.step(action)
+            obs, reward, terminated, truncated, info = _normalize_step(self.env.step(action))
             if self.multi_agent:
                 if i == self._skip - 2:
                     self._obs_buffer[0][0] = obs[0]
@@ -150,7 +163,7 @@ class MaxAndSkipEnv(gym.Wrapper):
                 if i == self._skip - 1:
                     self._obs_buffer[1] = obs
                 total_reward += reward
-            if done:
+            if terminated or truncated:
                 break
         # Note that the observation on the done=True frame
         # doesn't matter
@@ -160,10 +173,10 @@ class MaxAndSkipEnv(gym.Wrapper):
         else:
             max_frame = self._obs_buffer.max(axis=0)
 
-        return max_frame, total_reward, done, info
+        return max_frame, total_reward, terminated, truncated, info
 
     def reset(self, **kwargs):
-        return self.env.reset(**kwargs)
+        return _normalize_reset(self.env.reset(**kwargs))
 
 
 class ClipRewardEnv(gym.Wrapper):
@@ -173,15 +186,15 @@ class ClipRewardEnv(gym.Wrapper):
 
     def reset(self, **kwargs):
         self._steps = 0
-        return self.env.reset(**kwargs)
+        return _normalize_reset(self.env.reset(**kwargs))
 
     def step(self, action):
         """ Bin reward to {+1, 0, -1} by its sign. """
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = _normalize_step(self.env.step(action))
         self._steps += 1
         info["real_reward"] = reward
         info["num_steps"] = self._steps
-        return observation, np.sign(reward), done, info
+        return observation, np.sign(reward), terminated, truncated, info
 
 
 class WarpFrame(gym.ObservationWrapper):
@@ -246,16 +259,16 @@ class FrameStack(gym.Wrapper):
             dtype=env.observation_space.dtype
         )
 
-    def reset(self):
-        obs = self.env.reset()
+    def reset(self, **kwargs):
+        obs, info = _normalize_reset(self.env.reset(**kwargs))
         for _ in range(self.n_frames):
             self.frames.append(obs)
-        return self._get_ob()
+        return self._get_ob(), info
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = _normalize_step(self.env.step(action))
         self.frames.append(obs)
-        return self._get_ob(), reward, done, info
+        return self._get_ob(), reward, terminated, truncated, info
 
     def _get_ob(self):
         assert len(self.frames) == self.n_frames
@@ -287,19 +300,19 @@ class MultipleFrameStack(gym.Wrapper):
             dtype=env.observation_space.dtype
         )
 
-    def reset(self):
-        obs = self.env.reset()
+    def reset(self, **kwargs):
+        obs, info = _normalize_reset(self.env.reset(**kwargs))
         assert isinstance(obs, dict)
         for k in obs:
             for _ in range(self.n_frames):
                 self.frames_dict[k].append(obs[k])
-        return self._get_ob(obs.keys())
+        return self._get_ob(obs.keys()), info
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = _normalize_step(self.env.step(action))
         for k in obs:
             self.frames_dict[k].append(obs[k])
-        return self._get_ob(obs.keys()), reward, done, info
+        return self._get_ob(obs.keys()), reward, terminated, truncated, info
 
     def _get_ob(self, keys):
         ret = dict()
@@ -320,18 +333,20 @@ class FlattenMultiAgentObservation(gym.Wrapper):
         self.action_space = spaces.Box(low=-1, high=1, shape=(self.num_players, 2), dtype=self.action_space[0].dtype)
 
     def reset(self, **kwargs):
-        o = self.env.reset(**kwargs)
-        return self._get_obs(o)
+        o, info = _normalize_reset(self.env.reset(**kwargs))
+        return self._get_obs(o), info
 
     def step(self, action):
         assert len(action) == self.num_players, (len(action), action)
         action = {k: action[k] for k in range(self.num_players)}
-        o, r, d, i = self.env.step(action)
+        o, r, terminated, truncated, i = _normalize_step(self.env.step(action))
         for k in r:
             i[k]["reward"] = r[k]
-        if isinstance(d, dict):
-            d = any(d.values())
-        return self._get_obs(o), r[0], d, i
+        if isinstance(terminated, dict):
+            terminated = any(terminated.values())
+        if isinstance(truncated, dict):
+            truncated = any(truncated.values())
+        return self._get_obs(o), r[0], terminated, truncated, i
 
     def _get_obs(self, frame):
         return np.concatenate([f for f in frame.values()], axis=2)

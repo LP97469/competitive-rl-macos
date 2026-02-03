@@ -38,16 +38,34 @@ class TournamentEnvWrapper:
             np.asarray(action).reshape(-1),
             np.asarray(self.current_agent(self.prev_opponent_obs)).reshape(-1)
         ], axis=1)
-        obs, rew, done, info = self.env.step(tuple_action)
-        self.prev_opponent_obs = obs[1]
+        result = self.env.step(tuple_action)
+        if len(result) == 5:
+            obs, rew, terminated, truncated, info = result
+            done = np.logical_or(terminated, truncated)
+        else:
+            obs, rew, done, info = result
+        if isinstance(obs, (tuple, list)) and len(obs) > 1:
+            self.prev_opponent_obs = obs[1]
+            obs = obs[0]
+        else:
+            self.prev_opponent_obs = obs
         if done.ndim == 2:
             done = done[:, 0]
-        return obs[0], rew[:, 0].reshape(-1, 1), done.reshape(-1, 1), info
+        return obs, rew[:, 0].reshape(-1, 1), done.reshape(-1, 1), info
 
     def reset(self, **kwargs):
         obs = self.env.reset(**kwargs)
-        self.prev_opponent_obs = obs[1]
-        return obs[0]
+        if isinstance(obs, tuple):
+            obs = obs[0]
+        if isinstance(obs, (tuple, list)) and len(obs) > 1:
+            self.prev_opponent_obs = obs[1]
+            obs = obs[0]
+        else:
+            self.prev_opponent_obs = obs
+        return obs
 
     def seed(self, s):
         self.env.seed(s)
+
+    def close(self):
+        self.env.close()

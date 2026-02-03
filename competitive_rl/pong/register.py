@@ -12,14 +12,16 @@ def register_pong():
             entry_point=PongSinglePlayerEnv,
             kwargs=dict(
                 max_num_rounds=21
-            )
+            ),
+            disable_env_checker=True
         )
         register(
             id="cPongDouble-v0",
             entry_point=PongDoublePlayerEnv,
             kwargs=dict(
                 max_num_rounds=21
-            )
+            ),
+            disable_env_checker=True
         )
         print(
             "Register cPong-v0 and cPongDouble-v0 environments.")
