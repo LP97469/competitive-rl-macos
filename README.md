@@ -35,6 +35,36 @@ In this repo, we provide two interesting competitive RL environments:
 pip install git+https://github.com/cuhkrlcourse/competitive-rl.git
 ```
 
+### Troubleshooting
+
+**`UserWarning: pkg_resources is deprecated as an API`**
+
+This warning is emitted by dependencies that still import `pkg_resources` from `setuptools`. To silence it, either upgrade the offending dependency when a fix is released or temporarily pin `setuptools<81`. You can also capture the stack trace to identify the import source. This repo does not import `pkg_resources` directly.
+
+**`objc: Class SDLApplication is implemented in both ... pygame ... and ... cv2 ...` (macOS)**
+
+This warning appears when both `pygame` and a GUI-enabled OpenCV build load their own copies of SDL2. Ensure you install `opencv-python-headless` (which avoids SDL2) instead of `opencv-python`, or remove the duplicate SDL2 library from your environment.
+
+If you believe you already use `opencv-python-headless`, confirm which build is actually being imported:
+
+```bash
+python -m pip show opencv-python opencv-python-headless
+python - <<'PY'
+import cv2
+print("cv2 file:", cv2.__file__)
+print("cv2 version:", cv2.__version__)
+PY
+```
+
+The `cv2 file` path should point into your virtual environment. If it points elsewhere (e.g., system or Homebrew), you are importing a different OpenCV build than expected.
+
+If the SDL warning persists, rebuilding a headless wheel from source can remove bundled SDL2:
+
+```bash
+pip uninstall opencv-python opencv-python-headless
+pip install --no-binary opencv-python-headless opencv-python-headless
+```
+
 
 ## Usage
 
@@ -86,5 +116,3 @@ The action spaces:
 ## Acknowledgement
 
 This repo is contributed by many students and alumni from CUHK: Zhenghao Peng ([@pengzhenghao](https://github.com/pengzhenghao)), Edward Hui ([@Edwardhk](https://github.com/Edwardhk)), Yi Zhang ([@1155107756](https://github.com/1155107756)), Billy Ho ([@Poiutrew1004](https://github.com/Poiutrew1004)), Joe Lam ([@JoeLamKC](https://github.com/JoeLamKC))
-
-
