@@ -4,7 +4,7 @@ import sys
 import gym
 import numpy as np
 import pygame
-from gym import spaces
+from gymnasium import spaces
 
 CHEAT_CODES = 999
 
