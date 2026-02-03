@@ -1,7 +1,7 @@
 import random
 import sys
 
-import gym
+import gymnasium as gym
 import numpy as np
 import pygame
 from gymnasium import spaces
@@ -57,7 +57,7 @@ class PongSinglePlayerEnv(gym.Env):
         if mode == "rgb_array":
             return img
         elif mode == "human":
-            from gym.envs.classic_control import rendering
+            from gymnasium.envs.classic_control import rendering
 
             if self._viewer is None:
                 self._viewer = rendering.SimpleImageViewer()

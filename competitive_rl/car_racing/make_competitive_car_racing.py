@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 
 from competitive_rl.register import register_competitive_envs
 from competitive_rl.utils import DummyVecEnv, SubprocVecEnv

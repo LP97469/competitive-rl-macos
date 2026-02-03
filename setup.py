@@ -4,14 +4,14 @@ setup(
     name="competitive_rl", version="0.1.0",
     packages=['competitive_rl', 'competitive_rl.pong', 'competitive_rl.car_racing', 'competitive_rl.utils'],
     install_requires=[
-        "gym",
+        "gymnasium",
         "pygame>=2.6.1",
         "opencv-python",
         "numpy",
         "pandas",
         "pyyaml",
         "tabulate",
-        "box2d-py~=2.3.5"  # Identical to gym[box2d]
+        "box2d-py~=2.3.5"  # Identical to gymnasium[box2d]
     ],
     package_data={"competitive_rl": ["car_racing/fonts/*", "pong/*.ttf", "car_racing/*.png"]}
 )

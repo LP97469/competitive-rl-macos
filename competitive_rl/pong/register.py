@@ -1,5 +1,5 @@
-import gym
-from gym.envs.registration import register
+import gymnasium as gym
+from gymnasium.envs.registration import register
 
 from competitive_rl.pong.base_pong_env import PongSinglePlayerEnv, \
     PongDoublePlayerEnv

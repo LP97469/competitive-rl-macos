@@ -20,7 +20,7 @@ Instructor: Professor ZHOU Bolei. Assignment author: PENG Zhenghao.
 """
 import os.path as osp
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from competitive_rl.pong.base_pong_env import CHEAT_CODES
