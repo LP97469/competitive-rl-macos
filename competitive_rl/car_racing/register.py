@@ -1,8 +1,8 @@
-import gym
+import gymnasium as gym
 from competitive_rl.car_racing.car_racing_multi_players import CarRacing
 from competitive_rl.utils.atari_wrappers import FrameStack, WrapPyTorch, MultipleFrameStack, \
     FlattenMultiAgentObservation
-from gym.envs.registration import register
+from gymnasium.envs.registration import register
 
 
 def register_car_racing():

@@ -54,7 +54,7 @@ Note that for Pong environment, since it is built based on Atari Pong game, we r
 If you want to create a single Gym environment instance:
 
 ```python
-import gym
+import gymnasium as gym
 import competitive_rl
 
 competitive_rl.register_competitive_envs()

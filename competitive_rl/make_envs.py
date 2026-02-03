@@ -26,7 +26,7 @@ import os
 import shutil
 import warnings
 
-import gym
+import gymnasium as gym
 
 from competitive_rl.car_racing import make_car_racing, make_car_racing_double
 from competitive_rl.pong.competitive_pong_env import TournamentEnvWrapper

@@ -5,7 +5,7 @@
 Create the environment after registration:
 
 ```python
-import gym
+import gymnasium as gym
 import competitive_rl
 
 competitive_rl.register_competitive_envs()

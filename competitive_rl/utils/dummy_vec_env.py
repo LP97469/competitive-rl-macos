@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from .base_vec_env import VecEnv

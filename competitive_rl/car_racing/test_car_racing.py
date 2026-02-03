@@ -1,5 +1,5 @@
 from competitive_rl.car_racing import make_car_racing, register_car_racing
-import gym
+import gymnasium as gym
 
 register_car_racing()
 

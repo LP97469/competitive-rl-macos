@@ -37,13 +37,13 @@ import time
 import os
 
 import Box2D
-import gym
+import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pygame
 from Box2D.b2 import fixtureDef, polygonShape, contactListener
-from gym import spaces
-from gym.utils import seeding, EzPickle
+from gymnasium import spaces
+from gymnasium.utils import seeding, EzPickle
 
 from competitive_rl.car_racing.car_dynamics import Car
 from competitive_rl.car_racing.pygame_rendering import vertical_ind, horiz_ind, draw_text
@@ -849,7 +849,7 @@ class CarRacing(gym.Env, EzPickle):
             if mode == "rgb_array":
                 return obs
             else:
-                from gym.envs.classic_control import rendering
+                from gymnasium.envs.classic_control import rendering
                 if self._viewer is None:
                     self._viewer = rendering.SimpleImageViewer()
                 self._viewer.imshow(obs)
