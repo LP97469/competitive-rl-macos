@@ -50,6 +50,15 @@ class PongSinglePlayerEnv(gym.Env):
         obs = self._get_screen_img()
         return obs
 
+    def reset(self, *, seed=None, options=None):
+        if seed is not None:
+            self._seed(seed)
+        return self._reset(), {}
+
+    def step(self, action):
+        obs, reward, done, info = self._step(action)
+        return obs, reward, done, False, info
+
     def _render(self, mode="human", close=False):
         if close:
             return
@@ -68,6 +77,9 @@ class PongSinglePlayerEnv(gym.Env):
         self._game.draw_scoreboard(self._surface)
         obs = self._surface_to_img(self._surface)
         return obs
+
+    def render(self, mode="human"):
+        return self._render(mode=mode)
 
     def _surface_to_img(self, surface):
         img = pygame.surfarray.array3d(surface).astype(np.uint8)
@@ -145,6 +157,15 @@ class PongDoublePlayerEnv(PongSinglePlayerEnv):
         self._game.reset_game()
         obs = self._get_screen_img_double_player()
         return obs
+
+    def reset(self, *, seed=None, options=None):
+        if seed is not None:
+            self._seed(seed)
+        return self._reset(), {}
+
+    def step(self, action):
+        obs, reward, done, info = self._step(action)
+        return obs, reward, done, False, info
 
     def _get_screen_img_double_player(self):
         self._game.draw(self._surface)

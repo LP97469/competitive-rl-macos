@@ -102,9 +102,11 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
         envs = [make_car_racing(env_id, seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
                 range(num_envs)]
     elif env_id == "cPong-v0" or env_id == "cPongDouble-v0":
+        effective_frame_stack = frame_stack
         if env_id == "cPongDouble-v0":
-            assert frame_stack is None
-        envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, frame_stack) for i in range(num_envs)]
+            effective_frame_stack = None
+        envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, effective_frame_stack)
+                for i in range(num_envs)]
     elif env_id == "cCarRacingDouble-v0":
         envs = [make_car_racing_double(seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
                 range(num_envs)]

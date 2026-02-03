@@ -92,6 +92,7 @@ class FrictionDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
         self.env = env
+        self.verbose = env.verbose
 
     def BeginContact(self, contact):
         self._contact(contact, True)
@@ -161,6 +162,7 @@ class CarRacing(gym.Env, EzPickle):
 
     def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE, action_repeat=None):
         EzPickle.__init__(self)
+        self.verbose = verbose
         self.seed(seed=seed)
         self.contactListener_keepref = FrictionDetector(self)
         self.world = Box2D.b2World(
@@ -186,7 +188,6 @@ class CarRacing(gym.Env, EzPickle):
         self.cars = {}
         self.rewards = {i: 0 for i in range(num_player)}
         self.prev_rewards = {i: 0 for i in range(num_player)}
-        self.verbose = verbose
         self.num_player = num_player
         self.track = None
         self.done = {}
@@ -451,7 +452,9 @@ class CarRacing(gym.Env, EzPickle):
             json.dump(track, file)
         return True
 
-    def reset(self, use_local_track="", record_track_to=""):
+    def reset(self, *, seed=None, options=None, use_local_track="", record_track_to=""):
+        if seed is not None:
+            self.seed(seed)
         self._destroy()
         self.contactListener_keepref = FrictionDetector(self)
         self.world = Box2D.b2World(
@@ -522,7 +525,7 @@ class CarRacing(gym.Env, EzPickle):
 
         self.camera_follow = 0
         self.camera_update()
-        return self.step(None)[0]
+        return self.step(None)[0], {}
 
     @staticmethod
     def process_action(a):
@@ -849,10 +852,14 @@ class CarRacing(gym.Env, EzPickle):
             if mode == "rgb_array":
                 return obs
             else:
-                from gymnasium.envs.classic_control import rendering
+                try:
+                    from gymnasium.envs.classic_control import rendering
+                except ImportError:
+                    return obs
                 if self._viewer is None:
                     self._viewer = rendering.SimpleImageViewer()
                 self._viewer.imshow(obs)
+                return self._viewer.isopen
 
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")

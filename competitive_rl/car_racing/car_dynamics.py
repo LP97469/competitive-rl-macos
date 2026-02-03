@@ -161,7 +161,7 @@ class Car:
             # Steer each wheel
             dir = np.sign(w.steer - w.joint.angle)
             val = abs(w.steer - w.joint.angle)
-            w.joint.motorSpeed = dir * min(50.0 * val, 3.0)
+            w.joint.motorSpeed = float(dir * min(50.0 * val, 3.0))
 
             # Position => friction_limit
             grass = True
