@@ -6,7 +6,7 @@ setup(
     install_requires=[
         "gym",
         "pygame>=2.6.1",
-        "opencv-python",
+        "opencv-python-headless",
         "numpy",
         "pandas",
         "pyyaml",
